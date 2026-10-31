@@ -35,6 +35,7 @@
  */
 #include <string.h>
 #include "cpu.h"
+#include "sistema.h"
 
 static int es(const Instruccion *in, const char *mnemonico)
 {
@@ -223,6 +224,103 @@ Resultado ejecutar(CPU *cpu, const Instruccion *in)
     if (es(in, "slti")) {
         escribir_registro(cpu, in->rt, (int32_t)cpu->reg[in->rs] < in->simm ? 1 : 0);
         return OK;
+    }
+
+    if (es(in, "adda")) {
+        cpu->acc = sumar_con_banderas(cpu, cpu->acc, cpu->reg[in->rt]);
+        return OK;
+    }
+
+    if (es(in, "suba")) {
+        cpu->acc = restar_con_banderas(cpu, cpu->acc, cpu->reg[in->rt]);
+        return OK;
+    }
+
+    if (es(in, "addia")) {
+        cpu->acc = sumar_con_banderas(cpu, cpu->acc, (uint32_t)in->simm);
+        return OK;
+    }
+
+    if (es(in, "mtacc")) {
+        cpu->acc = cpu->reg[in->rs];
+        return OK;
+    }
+
+    if (es(in, "mfacc")) {
+        escribir_registro(cpu, in->rd, cpu->acc);
+        return OK;
+    }
+
+    if (es(in, "cmp")) {
+        restar_con_banderas(cpu, cpu->reg[in->rs], cpu->reg[in->rt]);
+        return OK;
+    }
+
+    if (es(in, "jz")) {
+        if (cpu->banderas & BANDERA_Z) cpu->pc = (cpu->pc & 0xF0000000) | (in->direccion << 2);
+        return OK;
+    }
+
+    if (es(in, "jn")) {
+        if (cpu->banderas & BANDERA_N) cpu->pc = (cpu->pc & 0xF0000000) | (in->direccion << 2);
+        return OK;
+    }
+
+    if (es(in, "jc")) {
+        if (cpu->banderas & BANDERA_C) cpu->pc = (cpu->pc & 0xF0000000) | (in->direccion << 2);
+        return OK;
+    }
+
+    if (es(in, "jv")) {
+        if (cpu->banderas & BANDERA_V) cpu->pc = (cpu->pc & 0xF0000000) | (in->direccion << 2);
+        return OK;
+    }
+
+    if (es(in, "mult")) {
+        int64_t p = (int64_t)(int32_t)cpu->reg[in->rs] * (int64_t)(int32_t)cpu->reg[in->rt];
+        cpu->hi = (uint32_t)((uint64_t)p >> 32);
+        cpu->lo = (uint32_t)p;
+        return OK;
+    }
+
+    if (es(in, "multu")) {
+        uint64_t p = (uint64_t)cpu->reg[in->rs] * (uint64_t)cpu->reg[in->rt];
+        cpu->hi = (uint32_t)(p >> 32);
+        cpu->lo = (uint32_t)p;
+        return OK;
+    }
+
+    if (es(in, "div")) {
+        if (cpu->reg[in->rt] == 0) return excepcion(cpu, "división entre cero");
+        cpu->lo = (uint32_t)((int32_t)cpu->reg[in->rs] / (int32_t)cpu->reg[in->rt]);
+        cpu->hi = (uint32_t)((int32_t)cpu->reg[in->rs] % (int32_t)cpu->reg[in->rt]);
+        return OK;
+    }
+
+    if (es(in, "divu")) {
+        if (cpu->reg[in->rt] == 0) return excepcion(cpu, "división entre cero");
+        cpu->lo = cpu->reg[in->rs] / cpu->reg[in->rt];
+        cpu->hi = cpu->reg[in->rs] % cpu->reg[in->rt];
+        return OK;
+    }
+
+    if (es(in, "mfhi")) {
+        escribir_registro(cpu, in->rd, cpu->hi);
+        return OK;
+    }
+
+    if (es(in, "mflo")) {
+        escribir_registro(cpu, in->rd, cpu->lo);
+        return OK;
+    }
+
+    if (es(in, "mul")) {
+        escribir_registro(cpu, in->rd, cpu->reg[in->rs] * cpu->reg[in->rt]);
+        return OK;
+    }
+
+    if (es(in, "syscall")) {
+        return llamar_sistema(cpu);
     }
 
     /* TODO: para cada instrucción nueva
