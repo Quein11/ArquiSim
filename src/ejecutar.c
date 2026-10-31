@@ -184,6 +184,47 @@ Resultado ejecutar(CPU *cpu, const Instruccion *in)
         return OK;
     }
 
+    if (es(in, "beq")) {
+        if (cpu->reg[in->rs] == cpu->reg[in->rt]) cpu->pc += (uint32_t)in->simm << 2;
+        return OK;
+    }
+
+    if (es(in, "bne")) {
+        if (cpu->reg[in->rs] != cpu->reg[in->rt]) cpu->pc += (uint32_t)in->simm << 2;
+        return OK;
+    }
+
+    if (es(in, "j")) {
+        cpu->pc = (cpu->pc & 0xF0000000) | (in->direccion << 2);
+        return OK;
+    }
+
+    if (es(in, "jal")) {
+        escribir_registro(cpu, 31, cpu->pc);
+        cpu->pc = (cpu->pc & 0xF0000000) | (in->direccion << 2);
+        return OK;
+    }
+
+    if (es(in, "jr")) {
+        cpu->pc = cpu->reg[in->rs];
+        return OK;
+    }
+
+    if (es(in, "slt")) {
+        escribir_registro(cpu, in->rd, (int32_t)cpu->reg[in->rs] < (int32_t)cpu->reg[in->rt] ? 1 : 0);
+        return OK;
+    }
+
+    if (es(in, "sltu")) {
+        escribir_registro(cpu, in->rd, cpu->reg[in->rs] < cpu->reg[in->rt] ? 1 : 0);
+        return OK;
+    }
+
+    if (es(in, "slti")) {
+        escribir_registro(cpu, in->rt, (int32_t)cpu->reg[in->rs] < in->simm ? 1 : 0);
+        return OK;
+    }
+
     /* TODO: para cada instrucción nueva
      *   1. agregue su línea en isa.txt (formato, opcode, funct, operandos)
      *   2. implemente aquí lo que hace
