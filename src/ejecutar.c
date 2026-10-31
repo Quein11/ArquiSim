@@ -153,6 +153,37 @@ Resultado ejecutar(CPU *cpu, const Instruccion *in)
         return OK;
     }
 
+    if (es(in, "lw")) {
+        uint32_t v;
+        if (leer_palabra(cpu, cpu->reg[in->rs] + (uint32_t)in->simm, &v) != OK) return EXCEPCION;
+        escribir_registro(cpu, in->rt, v);
+        return OK;
+    }
+
+    if (es(in, "sw")) {
+        if (escribir_palabra(cpu, cpu->reg[in->rs] + (uint32_t)in->simm, cpu->reg[in->rt]) != OK) return EXCEPCION;
+        return OK;
+    }
+
+    if (es(in, "lb")) {
+        uint8_t b;
+        if (leer_byte(cpu, cpu->reg[in->rs] + (uint32_t)in->simm, &b) != OK) return EXCEPCION;
+        escribir_registro(cpu, in->rt, (uint32_t)(int32_t)(int8_t)b);
+        return OK;
+    }
+
+    if (es(in, "lbu")) {
+        uint8_t b;
+        if (leer_byte(cpu, cpu->reg[in->rs] + (uint32_t)in->simm, &b) != OK) return EXCEPCION;
+        escribir_registro(cpu, in->rt, (uint32_t)b);
+        return OK;
+    }
+
+    if (es(in, "sb")) {
+        if (escribir_byte(cpu, cpu->reg[in->rs] + (uint32_t)in->simm, (uint8_t)(cpu->reg[in->rt] & 0xFF)) != OK) return EXCEPCION;
+        return OK;
+    }
+
     /* TODO: para cada instrucción nueva
      *   1. agregue su línea en isa.txt (formato, opcode, funct, operandos)
      *   2. implemente aquí lo que hace

@@ -58,4 +58,8 @@ addu   R  000000  100001  rd,rs,rt     # rd = rs + rt (sin excepción)
 subu   R  000000  100011  rd,rs,rt     # rd = rs - rt (sin excepción)
 addiu  I  001001  -       rt,rs,imm    # rt = rs + imm (imm con signo; sin excepción)
 
-# ---------------- Agregue aquí las demás instrucciones ----------------
+lw I 100011 - rt,imm(rs)
+sw I 101011 - rt,imm(rs)
+lb I 100000 - rt,imm(rs)
+lbu I 100100 - rt,imm(rs)
+sb I 101000 - rt,imm(rs)
